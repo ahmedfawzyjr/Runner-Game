@@ -10,24 +10,33 @@ class GameConfig {
   static const Map<Difficulty, DifficultySettings> difficulties = {
     Difficulty.easy: DifficultySettings(
       name: 'Easy',
+      description: 'Relaxed pace, fewer enemies',
       gameSpeed: 1.0,
       enemySpawnInterval: 3.5,
-      scoreMultiplier: 1.0,
-      enemySpeed: 80,
+      scoreMultiplier: 0.8,
+      enemySpeed: 70,
+      powerUpMultiplier: 1.5,
+      healthBonus: 1,
     ),
     Difficulty.medium: DifficultySettings(
       name: 'Medium',
-      gameSpeed: 1.3,
+      description: 'Balanced challenge',
+      gameSpeed: 1.2,
       enemySpawnInterval: 2.5,
-      scoreMultiplier: 1.5,
+      scoreMultiplier: 1.0,
       enemySpeed: 100,
+      powerUpMultiplier: 1.0,
+      healthBonus: 0,
     ),
     Difficulty.hard: DifficultySettings(
       name: 'Hard',
-      gameSpeed: 1.6,
+      description: 'Fast and aggressive enemies',
+      gameSpeed: 1.5,
       enemySpawnInterval: 1.8,
-      scoreMultiplier: 2.0,
+      scoreMultiplier: 1.5,
       enemySpeed: 130,
+      powerUpMultiplier: 0.5,
+      healthBonus: -1,
     ),
   };
 
@@ -54,21 +63,37 @@ class GameConfig {
 
   // Screen
   static const double groundY = 0.8;
+
+  // Distance scoring
+  static const double distanceScoreRate = 0.1; // Points per unit
+  
+  // Combo milestones for effects
+  static const int comboFlashThreshold = 5;
+  static const int comboMaxBonus = 10;
 }
 
 /// Settings for each difficulty level
 class DifficultySettings {
   final String name;
+  final String description;
   final double gameSpeed;
   final double enemySpawnInterval;
   final double scoreMultiplier;
   final double enemySpeed;
+  final double powerUpMultiplier;
+  final int healthBonus;
 
   const DifficultySettings({
     required this.name,
+    required this.description,
     required this.gameSpeed,
     required this.enemySpawnInterval,
     required this.scoreMultiplier,
     required this.enemySpeed,
+    this.powerUpMultiplier = 1.0,
+    this.healthBonus = 0,
   });
+
+  /// Get player health for this difficulty
+  int get playerHealth => GameConfig.playerMaxHealth + healthBonus;
 }

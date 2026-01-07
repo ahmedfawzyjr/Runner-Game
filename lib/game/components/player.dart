@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:flame/components.dart';
 import 'package:flame/collisions.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,7 @@ import '../managers/resource_manager.dart';
 import '../neon_runner_game.dart';
 import 'enemy.dart';
 
-/// Player component with animations and physics
+/// Player component with double jump, slide, and stomp mechanics
 class Player extends SpriteAnimationGroupComponent<PlayerState>
     with HasGameReference<NeonRunnerGame>, CollisionCallbacks {
   
@@ -19,16 +21,24 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   bool isOnGround = true;
   bool isAttacking = false;
   bool isInvincible = false;
+  bool isSliding = false;
   int health = GameConfig.playerMaxHealth;
   double attackCooldown = 0;
   double attackAnimationTime = 0;
+  double slideDuration = 0;
   
-  late SpriteAnimation runAnimation;
-  late SpriteAnimation jumpAnimation;
-  late SpriteAnimation attackAnimation;
-  late SpriteAnimation hitAnimation;
-  late SpriteAnimation deathAnimation;
-  late SpriteAnimation idleAnimation;
+  // Double jump
+  int jumpCount = 0;
+  static const int maxJumps = 2;
+  
+  // Slide
+  static const double slideMaxDuration = 0.6;
+  static const double slideCooldown = 0.3;
+  double slideTimer = 0;
+  
+  // Original hitbox size for restoring after slide
+  late Vector2 originalHitboxSize;
+  late Vector2 originalHitboxPosition;
   
   Player({
     required Vector2 position,
@@ -57,9 +67,11 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     current = PlayerState.running;
     
     // Add collision hitbox
+    originalHitboxSize = Vector2(50, 70);
+    originalHitboxPosition = Vector2(15, 5);
     add(RectangleHitbox(
-      size: Vector2(50, 70),
-      position: Vector2(15, 5),
+      size: originalHitboxSize.clone(),
+      position: originalHitboxPosition.clone(),
     ));
   }
 
@@ -78,7 +90,8 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         position.y = groundY;
         velocityY = 0;
         isOnGround = true;
-        if (current == PlayerState.jumping) {
+        jumpCount = 0; // Reset double jump
+        if (current == PlayerState.jumping && !isSliding) {
           current = PlayerState.running;
         }
       }
@@ -89,27 +102,106 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
       attackCooldown -= dt;
     }
     
+    // Update slide timer
+    if (slideTimer > 0) {
+      slideTimer -= dt;
+    }
+    
+    // Handle sliding
+    if (isSliding) {
+      slideDuration += dt;
+      if (slideDuration >= slideMaxDuration) {
+        endSlide();
+      }
+    }
+    
     // Reset attack state after animation duration
     if (isAttacking) {
       attackAnimationTime += dt;
-      final attackDuration = GameConfig.attackAnimSpeed * 3;
+      const attackDuration = GameConfig.attackAnimSpeed * 3;
       if (attackAnimationTime >= attackDuration) {
         isAttacking = false;
         attackAnimationTime = 0;
-        current = isOnGround ? PlayerState.running : PlayerState.jumping;
+        if (!isSliding) {
+          current = isOnGround ? PlayerState.running : PlayerState.jumping;
+        }
       }
     }
   }
 
-  /// Make the player jump
+  /// Make the player jump (supports double jump)
   void jump() {
-    if (!isOnGround) return;
+    if (jumpCount >= maxJumps) return;
     
+    jumpCount++;
     isOnGround = false;
-    velocityY = -GameConfig.playerJumpForce;
+    
+    // Second jump is slightly weaker
+    final jumpForce = jumpCount == 1 
+        ? GameConfig.playerJumpForce 
+        : GameConfig.playerJumpForce * 0.8;
+    
+    velocityY = -jumpForce;
     current = PlayerState.jumping;
-    AudioManager().playJump();
-    game.particleSystem.createSpeedLines(position);
+    
+    // Different sound for double jump
+    if (jumpCount == 2) {
+      AudioManager().playHighJump();
+      game.particleSystem.createSpeedLines(position);
+      game.particleSystem.createSpeedLines(position + Vector2(0, 20));
+    } else {
+      AudioManager().playJump();
+      game.particleSystem.createSpeedLines(position);
+    }
+    
+    // End slide if jumping
+    if (isSliding) {
+      endSlide();
+    }
+  }
+
+  /// Start sliding (duck under obstacles)
+  void startSlide() {
+    if (isSliding || slideTimer > 0 || !isOnGround) return;
+    
+    isSliding = true;
+    slideDuration = 0;
+    
+    // Shrink hitbox for sliding
+    final hitbox = children.whereType<RectangleHitbox>().firstOrNull;
+    if (hitbox != null) {
+      hitbox.size = Vector2(50, 35);
+      hitbox.position = Vector2(15, 40);
+    }
+    
+    // Visual: scale down vertically
+    scale = Vector2(1, 0.5);
+    position.y += size.y * 0.25;
+    
+    AudioManager().playSelect();
+  }
+
+  /// End sliding
+  void endSlide() {
+    if (!isSliding) return;
+    
+    isSliding = false;
+    slideTimer = slideCooldown;
+    
+    // Restore hitbox
+    final hitbox = children.whereType<RectangleHitbox>().firstOrNull;
+    if (hitbox != null) {
+      hitbox.size = originalHitboxSize.clone();
+      hitbox.position = originalHitboxPosition.clone();
+    }
+    
+    // Restore visual
+    scale = Vector2.all(1);
+    position.y -= size.y * 0.25;
+    
+    if (isOnGround && !isAttacking) {
+      current = PlayerState.running;
+    }
   }
 
   /// Perform attack
@@ -125,19 +217,37 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     // Check for enemies in range
     game.children.whereType<Enemy>().forEach((enemy) {
       final distance = (position.x - enemy.position.x).abs();
-      if (distance < GameConfig.attackRange + 30) {
+      if (distance < GameConfig.attackRange + 40) {
         enemy.takeDamage();
       }
     });
   }
 
+  /// Stomp on enemy - bounce up and kill enemy
+  void stompEnemy(Enemy enemy) {
+    if (enemy.isDead) return;
+    
+    // Kill the enemy
+    enemy.takeDamage();
+    
+    // Bounce up (smaller jump, doesn't use jump count)
+    velocityY = -GameConfig.playerJumpForce * 0.65;
+    isOnGround = false;
+    current = PlayerState.jumping;
+    
+    // Play stomp sound and effects
+    AudioManager().playJump();
+    game.particleSystem.createExplosion(enemy.position);
+    game.cameraShake.shake(intensity: 3, duration: 0.2);
+  }
+
   /// Take damage from enemy
   void takeDamage() {
-    if (isInvincible) return;
+    if (isInvincible || isSliding) return;
     
     health--;
     AudioManager().playHit();
-    game.cameraShake.shake(intensity: 10, duration: 0.4);
+    game.cameraShake.shake(intensity: 12, duration: 0.4);
     game.particleSystem.createHitEffect(position);
     
     if (health <= 0) {
@@ -147,7 +257,10 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
       isInvincible = true;
       current = PlayerState.hit;
       
-      Future.delayed(const Duration(milliseconds: 500), () {
+      // Visual flash effect
+      _flashEffect();
+      
+      Future.delayed(const Duration(milliseconds: 800), () {
         isInvincible = false;
         if (current == PlayerState.hit) {
           current = PlayerState.running;
@@ -156,12 +269,27 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     }
   }
 
+  void _flashEffect() async {
+    for (int i = 0; i < 4; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!isMounted) return;
+      opacity = 0.3;
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!isMounted) return;
+      opacity = 1.0;
+    }
+  }
+
   /// Player death
   void die() {
     current = PlayerState.death;
     isInvincible = true;
     
-    Future.delayed(const Duration(milliseconds: 500), () {
+    // Death particles
+    game.particleSystem.createExplosion(position);
+    game.cameraShake.shake(intensity: 15, duration: 0.5);
+    
+    Future.delayed(const Duration(milliseconds: 600), () {
       onDeath();
     });
   }
@@ -169,7 +297,19 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is Enemy && !other.isDead) {
-      takeDamage();
+      // Check if player is falling onto enemy (stomp)
+      final playerBottom = position.y + size.y / 2;
+      final enemyTop = other.position.y - other.size.y / 2;
+      final isAboveEnemy = playerBottom < enemyTop + 25;
+      final isFalling = velocityY > 50;
+      
+      if (!isOnGround && isFalling && isAboveEnemy) {
+        // Stomp - kill enemy and bounce
+        stompEnemy(other);
+      } else if (!isSliding) {
+        // Regular collision - take damage (sliding makes you invulnerable)
+        takeDamage();
+      }
     }
     super.onCollision(intersectionPoints, other);
   }

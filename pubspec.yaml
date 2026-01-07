@@ -28,6 +28,16 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^2.0.1
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/app_icon.png"
+  adaptive_icon_background: "#0D0D1A"
+  adaptive_icon_foreground: "assets/app_icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
 
 flutter:
 
@@ -35,5 +45,8 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/platform/Sprites/Characters/Default/
+    - assets/images/platform/Sprites/Enemies/Default/
     - assets/audio/
+    - assets/audio/platform/Sounds/
 

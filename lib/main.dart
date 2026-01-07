@@ -5,18 +5,18 @@ import 'screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Set landscape orientation
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  
+
   // Hide system UI for immersive gameplay
   SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.immersiveSticky,
   );
-  
+
   runApp(const NeonRunnerApp());
 }
 
@@ -30,10 +30,10 @@ class NeonRunnerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.dark(
+        colorScheme: const ColorScheme.dark(
           primary: Colors.cyan,
           secondary: Colors.purple,
-          surface: const Color(0xFF0D0D1A),
+          surface: Color(0xFF0D0D1A),
         ),
         scaffoldBackgroundColor: const Color(0xFF0D0D1A),
       ),
