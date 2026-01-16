@@ -81,6 +81,14 @@ The APK will be located at `build/app/outputs/flutter-apk/app-release.apk`.
 flutter build appbundle --release
 ```
 
+### 🌐 Web Build (Vercel Hosting)
+
+```bash
+flutter build web --release
+```
+
+The web build will be located at `build/web`. Deploy this folder to Vercel or any static hosting platform.
+
 ---
 
 ## 📂 Project Structure

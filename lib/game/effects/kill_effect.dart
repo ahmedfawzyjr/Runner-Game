@@ -104,27 +104,27 @@ class ScorePopup extends PositionComponent {
     super.render(canvas);
 
     // Calculate fade out
-    final fadeStart = 0.8;
-    final alpha = _lifetime < fadeStart 
-        ? 1.0 
+    const fadeStart = 0.8;
+    final alpha = _lifetime < fadeStart
+        ? 1.0
         : 1.0 - ((_lifetime - fadeStart) / 0.5).clamp(0.0, 1.0);
-    
+
     if (alpha <= 0) return;
 
     // Get style based on combo
     final style = _getComboStyle();
-    
+
     // Draw glow background circle
     _drawGlowBackground(canvas, style, alpha);
-    
+
     // Draw score text with neon effect
     _drawScoreText(canvas, style, alpha);
-    
+
     // Draw combo indicator
     if (comboCount >= 2) {
       _drawComboIndicator(canvas, style, alpha);
     }
-    
+
     // Draw icon/emoji
     _drawIcon(canvas, style, alpha);
   }
@@ -191,19 +191,19 @@ class ScorePopup extends PositionComponent {
     final pulseSize = 1.0 + sin(_glowPulse) * 0.1;
     final baseRadius = 25.0 + (comboCount * 2).clamp(0, 20);
     final radius = baseRadius * pulseSize;
-    
+
     // Outer glow
     final glowPaint = Paint()
       ..color = style.glowColor.withValues(alpha: 0.3 * alpha)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
     canvas.drawCircle(Offset.zero, radius + 10, glowPaint);
-    
+
     // Inner glow
     final innerGlowPaint = Paint()
       ..color = style.glowColor.withValues(alpha: 0.5 * alpha)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawCircle(Offset.zero, radius, innerGlowPaint);
-    
+
     // Core circle
     final corePaint = Paint()
       ..color = style.primaryColor.withValues(alpha: 0.2 * alpha);
@@ -212,7 +212,7 @@ class ScorePopup extends PositionComponent {
 
   void _drawScoreText(Canvas canvas, _ComboStyle style, double alpha) {
     final scoreText = '+$score';
-    
+
     // Glow text (drawn behind)
     final glowPainter = TextPainter(
       text: TextSpan(
@@ -226,7 +226,7 @@ class ScorePopup extends PositionComponent {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    
+
     // Draw glow layers
     for (var i = 3; i > 0; i--) {
       final blurPaint = Paint()
@@ -242,7 +242,7 @@ class ScorePopup extends PositionComponent {
       );
       canvas.restore();
     }
-    
+
     // Main text with gradient shader
     final textPainter = TextPainter(
       text: TextSpan(
@@ -273,7 +273,7 @@ class ScorePopup extends PositionComponent {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    
+
     textPainter.paint(
       canvas,
       Offset(-textPainter.width / 2, -textPainter.height / 2 - 5),
@@ -300,7 +300,7 @@ class ScorePopup extends PositionComponent {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    
+
     labelPainter.paint(
       canvas,
       Offset(-labelPainter.width / 2, 18),
@@ -310,7 +310,7 @@ class ScorePopup extends PositionComponent {
   void _drawIcon(Canvas canvas, _ComboStyle style, double alpha) {
     // Animated bounce for icon
     final bounce = sin(_glowPulse * 1.5) * 3;
-    
+
     final iconPainter = TextPainter(
       text: TextSpan(
         text: style.icon,
@@ -320,7 +320,7 @@ class ScorePopup extends PositionComponent {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    
+
     iconPainter.paint(
       canvas,
       Offset(-iconPainter.width / 2, -45 + bounce),

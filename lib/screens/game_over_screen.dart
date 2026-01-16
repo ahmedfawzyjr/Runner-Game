@@ -622,6 +622,8 @@ class _ShareDialog extends StatelessWidget {
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
+                            decoration: TextDecoration.none,
+                            decorationThickness: 0,
                           ),
                         ),
                         Text(
@@ -629,6 +631,8 @@ class _ShareDialog extends StatelessWidget {
                           style: GoogleFonts.rajdhani(
                             fontSize: 14,
                             color: Colors.grey.shade500,
+                            decoration: TextDecoration.none,
+                            decorationThickness: 0,
                           ),
                         ),
                       ],
@@ -660,11 +664,13 @@ class _ShareDialog extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      '🎮 NEON RUNNER',
+                      'NEON RUNNER',
                       style: GoogleFonts.audiowide(
                         fontSize: 14,
                         color: Colors.cyan,
                         letterSpacing: 2,
+                        decoration: TextDecoration.none,
+                        decorationThickness: 0,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -674,6 +680,8 @@ class _ShareDialog extends StatelessWidget {
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
+                        decoration: TextDecoration.none,
+                        decorationThickness: 0,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -682,6 +690,8 @@ class _ShareDialog extends StatelessWidget {
                       style: GoogleFonts.rajdhani(
                         fontSize: 14,
                         color: Colors.grey.shade400,
+                        decoration: TextDecoration.none,
+                        decorationThickness: 0,
                       ),
                     ),
                   ],
@@ -734,6 +744,8 @@ class _ShareDialog extends StatelessWidget {
                           fontSize: 14,
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.none,
+                          decorationThickness: 0,
                         ),
                       ),
                     ],

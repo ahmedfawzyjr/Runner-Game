@@ -1,11 +1,11 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../audio/audio_manager.dart';
 import '../core/game_state.dart';
 import '../game/managers/resource_manager.dart';
-import '../audio/audio_manager.dart';
 
 /// Premium character selection screen with all 5 characters visible
 class CharacterSelectScreen extends StatefulWidget {
@@ -72,8 +72,10 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
     await ResourceManager().changeCharacterColor(color);
   }
 
-  void _confirmSelection() {
+  void _confirmSelection() async {
     AudioManager().playButton();
+    // Refresh audio to ensure sounds work after navigation
+    await AudioManager().refreshSounds();
     widget.onSelected();
     Navigator.pop(context);
   }
@@ -88,7 +90,9 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
     final availableWidth = size.width - 40; // padding
     final cardsPerRow = isLandscape ? 5 : 3;
     final spacing = isLandscape ? 12.0 : 16.0;
-    final cardWidth = ((availableWidth - (spacing * (cardsPerRow - 1))) / cardsPerRow).clamp(70.0, 140.0);
+    final cardWidth =
+        ((availableWidth - (spacing * (cardsPerRow - 1))) / cardsPerRow)
+            .clamp(70.0, 140.0);
     final cardHeight = cardWidth * 1.25;
 
     return Scaffold(
@@ -118,7 +122,8 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                      icon: const Icon(Icons.arrow_back_rounded,
+                          color: Colors.white),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const SizedBox(width: 8),
@@ -190,12 +195,16 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen>
                         ),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Colors.cyan.shade400, Colors.purple.shade400],
+                            colors: [
+                              Colors.cyan.shade400,
+                              Colors.purple.shade400
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.cyan.withOpacity(0.4 * _glowAnimation.value),
+                              color: Colors.cyan
+                                  .withOpacity(0.4 * _glowAnimation.value),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),
@@ -275,7 +284,8 @@ class _CharacterCard extends StatelessWidget {
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Colors.cyan.withOpacity(0.5 * glowAnimation.value),
+                        color:
+                            Colors.cyan.withOpacity(0.5 * glowAnimation.value),
                         blurRadius: 20,
                         spreadRadius: 3,
                       ),
@@ -349,5 +359,6 @@ class CharacterOption {
   final Color primaryColor;
   final Color secondaryColor;
 
-  const CharacterOption(this.id, this.name, this.primaryColor, this.secondaryColor);
+  const CharacterOption(
+      this.id, this.name, this.primaryColor, this.secondaryColor);
 }

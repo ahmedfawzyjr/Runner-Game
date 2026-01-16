@@ -61,8 +61,8 @@ class GameConfig {
   // Parallax layer speeds
   static const List<double> parallaxSpeeds = [10, 20, 30, 40, 50, 60];
 
-  // Screen
-  static const double groundY = 0.8;
+  // Screen - groundY is the Y position where ground is (percentage of screen height)
+  static const double groundY = 0.88;
 
   // Distance scoring
   static const double distanceScoreRate = 0.1; // Points per unit
