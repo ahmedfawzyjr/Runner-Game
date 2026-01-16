@@ -8,6 +8,7 @@ import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../audio/audio_manager.dart';
 import '../core/game_config.dart';
@@ -25,7 +26,7 @@ import 'managers/score_manager.dart';
 
 /// Main game class for Neon Runner with collectibles and power-ups
 class NeonRunnerGame extends FlameGame
-    with TapCallbacks, DragCallbacks, HasCollisionDetection {
+    with TapCallbacks, DragCallbacks, KeyboardEvents, HasCollisionDetection {
   late Player player;
   late ParallaxBackgroundComponent background;
   late HudComponent hud;
@@ -366,6 +367,45 @@ class NeonRunnerGame extends FlameGame
   void onDragCancel(DragCancelEvent event) {
     super.onDragCancel(event);
     dragStart = null;
+  }
+
+  @override
+  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (isGameOver) return KeyEventResult.ignored;
+
+    if (event is KeyDownEvent) {
+      // Jump: W, Up Arrow, Space
+      if (event.logicalKey == LogicalKeyboardKey.keyW ||
+          event.logicalKey == LogicalKeyboardKey.arrowUp ||
+          event.logicalKey == LogicalKeyboardKey.space) {
+        player.jump();
+        return KeyEventResult.handled;
+      }
+
+      // Slide: S, Down Arrow
+      if (event.logicalKey == LogicalKeyboardKey.keyS ||
+          event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        player.startSlide();
+        return KeyEventResult.handled;
+      }
+
+      // Attack: D, Right Arrow, X
+      if (event.logicalKey == LogicalKeyboardKey.keyD ||
+          event.logicalKey == LogicalKeyboardKey.arrowRight ||
+          event.logicalKey == LogicalKeyboardKey.keyX) {
+        player.performAttack();
+        return KeyEventResult.handled;
+      }
+
+      // Pause: P, Escape
+      if (event.logicalKey == LogicalKeyboardKey.keyP ||
+          event.logicalKey == LogicalKeyboardKey.escape) {
+        pause();
+        return KeyEventResult.handled;
+      }
+    }
+
+    return KeyEventResult.ignored;
   }
 
   /// Called when an enemy is killed
